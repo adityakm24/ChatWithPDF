@@ -43,7 +43,7 @@ export default async function handler(req, res) {
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer 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', // Replace with your OpenAI API key
+                    'Authorization': 'Bearer OPEN_API_KEY', // Replace with your OpenAI API key
                 },
             }
         );
