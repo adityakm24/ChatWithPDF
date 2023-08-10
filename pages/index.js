@@ -6,6 +6,7 @@ export default function Home() {
     const [pdfFile, setPdfFile] = useState(null);
     const [prompt, setPrompt] = useState('');
     const [tweet, setTweet] = useState('');
+    const [pdfText, setPdfText] = useState('');
 
     const handleFileUpload = (e) => {
         setPdfFile(e.target.files[0]);
@@ -24,16 +25,16 @@ export default function Home() {
                 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.worker.js'; // Set worker source
 
                 const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
-                let pdfText = '';
+                let extractedPdfText = '';
 
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                     const page = await pdf.getPage(pageNum);
                     const pageText = await page.getTextContent();
-                    pdfText += pageText.items.map(item => item.str).join(' ');
+                    extractedPdfText += pageText.items.map(item => item.str).join(' ');
                 }
 
-                console.log('Extracted Text:', pdfText); // Log the extracted text
-                setPrompt(pdfText);
+                console.log('Extracted Text:', extractedPdfText); // Log the extracted text
+                setPdfText(extractedPdfText);
             };
 
             reader.readAsArrayBuffer(pdfFile);
@@ -43,7 +44,22 @@ export default function Home() {
     };
 
     const generateTweet = async () => {
-        // Generate tweet logic using the prompt
+        if (!prompt) {
+            alert('Please extract text from a PDF first.');
+            return;
+        }
+
+        try {
+            const combinedPrompt = `${prompt}\n\n${pdfText}`; // Combine prompt and extracted PDF text
+
+            const response = await axios.post('http://localhost:3000/api/generateTweet', {
+                prompt: combinedPrompt,
+            });
+
+            setTweet(response.data.tweet);
+        } catch (error) {
+            console.error('Error generating tweet:', error);
+        }
     };
 
     return (
