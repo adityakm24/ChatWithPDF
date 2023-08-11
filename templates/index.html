@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Custom Q&A</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f2f2f2;
+        }
+        .box {
+            width: 80%;
+            max-width: 500px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+        }
+        .heading {
+            text-align: center;
+        }
+        .input-container {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        #query {
+            flex-grow: 1;
+            border: none;
+            padding: 10px;
+        }
+        #submit {
+            background-color: #007bff;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        #submit:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .answer-card {
+            margin-top: 20px;
+            background-color: #f2f2f2;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .loading {
+            display: none;
+            margin-left: 10px;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ccc;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1 class="heading">Tweet Generator</h1>
+        <form method="POST" action="/upload" enctype="multipart/form-data">
+            <label for="file">Upload a file:</label><br>
+            <input type="file" id="file" name="file"><br>
+            <input type="submit" value="Upload">
+        </form>
+        {% if success %}
+        <p style="color: green;">{{ success }}</p>
+        {% endif %}
+        {% if error %}
+        <p style="color: red;">{{ error }}</p>
+        {% endif %}
+        <hr>
+        <form method="POST" action="/ask">
+            <div class="input-container">
+                <input type="text" id="query" name="query" placeholder="Type Your Thought to Generate Tweets...">
+                <button id="submit" type="submit" disabled>Submit<span class="loading"></span></button>
+            </div>
+        </form>
+        <div class="answer-card">
+            <h2>Answer:</h2>
+            <p>{{ answer }}</p>
+        </div>
+    </div>
+    <script>
+        const queryInput = document.getElementById('query');
+        const submitButton = document.getElementById('submit');
+        const loadingSpinner = document.querySelector('.loading');
+
+        queryInput.addEventListener('input', () => {
+            if (queryInput.value.trim() !== '') {
+                submitButton.removeAttribute('disabled');
+            } else {
+                submitButton.setAttribute('disabled', 'disabled');
+            }
+        });
+
+        submitButton.addEventListener('click', () => {
+            loadingSpinner.style.display = 'inline-block';
+        });
+    </script>
+</body>
+</html>
