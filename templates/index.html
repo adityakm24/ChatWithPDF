@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Custom Q&A</title>
+    <title>Tweet Generator</title>
     <style>
         body {
+
             display: flex;
             justify-content: center;
             align-items: center;
@@ -11,18 +12,19 @@
             margin: 0;
             background-color: #f2f2f2;
         }
-        .box {
-            width: 80%;
-            max-width: 500px;
-            background-color: white;
+        .container {
+
+            width: 100%;
+            height: 100%;
             padding: 20px;
-            border-radius: 10px;
+            background-color: white;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
         }
         .heading {
             text-align: center;
         }
         .input-container {
+            margin-top: 100px;
             display: flex;
             align-items: center;
             border: 1px solid #ccc;
@@ -33,6 +35,7 @@
             flex-grow: 1;
             border: none;
             padding: 10px;
+            width: 100%; /* Set input width to 100% of its container */
         }
         #submit {
             background-color: #007bff;
@@ -45,11 +48,40 @@
             background-color: #ccc;
             cursor: not-allowed;
         }
+        #generate-btn {
+            background-color: #007bff;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto;
+            margin-top: 20px;
+        }
+        #generate-btn:hover {
+            background-color: #0056b3;
+        }
         .answer-card {
             margin-top: 20px;
             background-color: #f2f2f2;
             padding: 15px;
             border-radius: 5px;
+            display: flex;
+            overflow-x: auto;
+            justify-content: flex-start;
+        }
+        .tweet-card {
+            flex: 0 0 calc(33.33% - 20px);
+            margin: 10px;
+            background-color: white;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .tweet-content {
+            margin-bottom: 10px;
         }
         .loading {
             display: none;
@@ -61,6 +93,17 @@
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
+        .post-button {
+            background-color: #007bff;
+            width: 100%;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            cursor: pointer;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+        }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -68,12 +111,12 @@
     </style>
 </head>
 <body>
-    <div class="box">
+    <div class="container">
         <h1 class="heading">Tweet Generator</h1>
         <form method="POST" action="/upload" enctype="multipart/form-data">
-            <label for="file">Upload a file:</label><br>
-            <input type="file" id="file" name="file"><br>
-            <input type="submit" value="Upload">
+            <label for="file" style="font-weight: bold;">Upload a PDF file:</label><br>
+            <input type="file" id="file" name="file" style="margin-top: 5px; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
+            <input type="submit" value="Upload" style="background-color: #007bff; border: none; color: white; padding: 5px 15px; cursor: pointer; margin-top: 10px;">
         </form>
         {% if success %}
         <p style="color: green;">{{ success }}</p>
@@ -84,19 +127,26 @@
         <hr>
         <form method="POST" action="/ask">
             <div class="input-container">
-                <input type="text" id="query" name="query" placeholder="Type Your Thought to Generate Tweets...">
-                <button id="submit" type="submit" disabled>Submit<span class="loading"></span></button>
+                <input type="text" id="query" name="query" placeholder="Type Your Thought to Generate Tweets..." style="flex-grow: 1; border: none; padding: 10px;">
+                <button id="submit" type="submit" disabled style="background-color: #007bff; border: none; color: white; padding: 10px 20px; cursor: pointer;">Generate Idea<span class="loading"></span></button>
             </div>
         </form>
         <div class="answer-card">
-            <h2>Answer:</h2>
-            <p>{{ answer }}</p>
+            {% for ans in answers %}
+                <div class="tweet-card">
+                    <p class="tweet-content">{{ ans }}</p>
+                    <button class="post-button">Post to Twitter</button>
+                </div>
+            {% endfor %}
         </div>
+        <button id="generate-btn">Generate More Tweets</button>
     </div>
     <script>
         const queryInput = document.getElementById('query');
         const submitButton = document.getElementById('submit');
         const loadingSpinner = document.querySelector('.loading');
+        const generateButton = document.getElementById('generate-btn');
+        const tweetCards = document.querySelectorAll('.tweet-card');
 
         queryInput.addEventListener('input', () => {
             if (queryInput.value.trim() !== '') {
@@ -108,6 +158,29 @@
 
         submitButton.addEventListener('click', () => {
             loadingSpinner.style.display = 'inline-block';
+        });
+
+        generateButton.addEventListener('click', async () => {
+            loadingSpinner.style.display = 'inline-block';
+            const response = await fetch('/generate_tweets');
+            const data = await response.json();
+            loadingSpinner.style.display = 'none';
+
+            tweetCards.forEach((tweetCard, index) => {
+                const tweetContent = tweetCard.querySelector('.tweet-content');
+                tweetContent.textContent = data.answers[index];
+            });
+        });
+
+        tweetCards.forEach(tweetCard => {
+            const postButton = tweetCard.querySelector('.post-button');
+            const tweetContent = tweetCard.querySelector('.tweet-content');
+            postButton.addEventListener('click', async () => {
+                const tweetText = tweetContent.textContent;
+                const encodedText = encodeURIComponent(tweetText);
+                const twitterUrl = `https://twitter.com/intent/tweet?text=${encodedText}`;
+                window.open(twitterUrl, '_blank');
+            });
         });
     </script>
 </body>
